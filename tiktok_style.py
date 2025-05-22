@@ -4,7 +4,7 @@ class TikTokStyle:
         self.background_color = "#000000"
         self.text_color = "#ffffff"
         self.grid_color = "#333333"
-        self.line_color = "#2a6bfdff"  # Updated to use the blue you provided
+        self.line_color = "#2a6bfd"  # Fixed: removed 'ff' suffix
         self.font_family = "Arial, sans-serif"
         self.title_font_size = 16
         self.text_font_size = 12
@@ -14,12 +14,12 @@ class TikTokStyle:
         # Chart-specific styling
         self.colorscale = "viridis"  # For heatmap
 
-        # Extended color palette - starting with your colors and adding more variations
+        # Fixed color palette - removed invalid colors
         self.bar_colors = [
-            "#fe2c56",  # Red/Pink (your color)
-            "#2a6bfdff",  # Blue (your color)
-            "#f4f004",  # Yellow (your color)
-            "#00faa2",  # Green (your color)
+            "#fe2c56",  # Red/Pink
+            "#2a6bfd",  # Blue (fixed)
+            "#f4f004",  # Yellow
+            "#00faa2",  # Green
             "#ff6b35",  # Orange
             "#9b59b6",  # Purple
             "#1abc9c",  # Teal
@@ -35,15 +35,15 @@ class TikTokStyle:
             "#d35400",  # Pumpkin
             "#27ae60",  # Nephritis Green
             "#2980b9",  # Belize Blue
-            "#c0392b"  # Dark Red
+            "#c0392b"   # Dark Red
         ]
 
-        # Use the same extended colors for line charts and grouped data
+        # Use the same colors for line charts
         self.color_sequence = [
-            "#fe2c56",  # Red/Pink (your color)
-            "#2a6bfdff",  # Blue (your color)
-            "#f4f004",  # Yellow (your color)
-            "#00faa2",  # Green (your color)
+            "#fe2c56",  # Red/Pink
+            "#2a6bfd",  # Blue (fixed)
+            "#f4f004",  # Yellow
+            "#00faa2",  # Green
             "#ff6b35",  # Orange
             "#9b59b6",  # Purple
             "#1abc9c",  # Teal
@@ -59,17 +59,13 @@ class TikTokStyle:
             "#d35400",  # Pumpkin
             "#27ae60",  # Nephritis Green
             "#2980b9",  # Belize Blue
-            "#c0392b"  # Dark Red
+            "#c0392b"   # Dark Red
         ]
 
-        self.marker_size = 8  # Marker size for line charts
-
-        # Line chart specific options
-        self.show_markers = True  # Whether to show data points on line charts
-        self.line_shape = "linear"  # Can be: 'linear', 'spline', 'hv', 'vh', 'hvh', 'vhv'
-
-        # General chart options
-        self.hide_zero_values = False  # Whether to hide zero values in charts
+        self.marker_size = 8
+        self.show_markers = True
+        self.line_shape = "linear"
+        self.hide_zero_values = False
 
     def get_layout_params(self):
         return {
@@ -88,7 +84,7 @@ class TikTokStyle:
             "xaxis": dict(
                 gridcolor=self.grid_color,
                 showline=True,
-                linecolor=self.text_color,  # Use text color for axis lines
+                linecolor=self.text_color,
                 linewidth=self.axis_line_width,
                 tickfont=dict(color=self.text_color),
                 title=dict(font=dict(color=self.text_color))
@@ -96,7 +92,7 @@ class TikTokStyle:
             "yaxis": dict(
                 gridcolor=self.grid_color,
                 showline=True,
-                linecolor=self.text_color,  # Use text color for axis lines
+                linecolor=self.text_color,
                 linewidth=self.axis_line_width,
                 tickfont=dict(color=self.text_color),
                 title=dict(font=dict(color=self.text_color))
@@ -106,21 +102,21 @@ class TikTokStyle:
                 font=dict(color=self.text_color),
                 title=dict(font=dict(color=self.text_color))
             ),
-            "colorway": self.color_sequence  # Set color sequence for all traces
+            "colorway": self.color_sequence
         }
 
     def get_line_params(self):
         return dict(
             width=self.line_width,
             color=self.line_color,
-            shape=self.line_shape  # Apply line shape (linear or spline)
+            shape=self.line_shape
         )
 
     def get_marker_params(self):
         if self.show_markers:
             return dict(size=self.marker_size)
         else:
-            return dict(size=0)  # Set size to 0 to hide markers
+            return dict(size=0)
 
     def get_coloraxis_params(self):
         return dict(
@@ -138,7 +134,6 @@ class TikTokStyle:
         }
 
     def to_dict(self):
-        """Convert style settings to dictionary for saving as preferences"""
         return {
             "background_color": self.background_color,
             "text_color": self.text_color,
@@ -160,7 +155,6 @@ class TikTokStyle:
 
     @classmethod
     def from_dict(cls, style_dict):
-        """Create style instance from dictionary"""
         style = cls()
         for key, value in style_dict.items():
             if hasattr(style, key):
