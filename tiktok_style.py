@@ -4,7 +4,7 @@ class TikTokStyle:
         self.background_color = "#000000"
         self.text_color = "#ffffff"
         self.grid_color = "#333333"
-        self.line_color = "#fe2c56"  # TikTok pink/red
+        self.line_color = "#00f2ea"  # Change from "#2a6bfd" to TikTok teal
         self.font_family = "Arial, sans-serif"
         self.title_font_size = 16
         self.text_font_size = 12
@@ -62,10 +62,10 @@ class TikTokStyle:
             "#c0392b"   # Dark Red
         ]
 
-        self.marker_size = 8
-        self.show_markers = True
+        self.marker_size = 5
+        self.show_markers = False
         self.line_shape = "linear"
-        self.hide_zero_values = False
+        self.hide_zero_values = True
 
     def get_layout_params(self):
         return {
