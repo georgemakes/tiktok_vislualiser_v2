@@ -49,7 +49,7 @@ def save_preferences(style_dict):
 
 
 def main():
-    st.title("TikTok Ad Report Analyzer")
+    st.title("🎵 GG Data Visualiser")
 
     # Initialize session state variables if they don't exist
     if 'style' not in st.session_state:

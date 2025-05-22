@@ -244,7 +244,7 @@ class BarChart:
             return True  # One metric has no variation, definitely need normalization
 
         ratio = max_range / min_range
-        return ratio > 100  # Threshold for when normalization is needed
+        return ratio > 10  # Threshold for when normalization is needed
 
     def _normalize_metrics(self, data, metrics):
         """Normalize metrics to 0-1 scale for better visualization"""
