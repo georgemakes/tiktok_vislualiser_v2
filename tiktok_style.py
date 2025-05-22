@@ -4,7 +4,7 @@ class TikTokStyle:
         self.background_color = "#000000"
         self.text_color = "#ffffff"
         self.grid_color = "#333333"
-        self.line_color = "#2a6bfd"  # Fixed: removed 'ff' suffix
+        self.line_color = "#fe2c56"  # TikTok pink/red
         self.font_family = "Arial, sans-serif"
         self.title_font_size = 16
         self.text_font_size = 12

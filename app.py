@@ -13,7 +13,7 @@ from bar_chart import BarChart
 from heatmap import HeatMap
 from tiktok_style import TikTokStyle
 
-st.set_page_config(page_title="TikTok Ad Report Analyzer", layout="wide")
+st.set_page_config(page_title="GG Data Visualiser", page_icon="🎵", layout="wide")
 
 
 def load_preferences():
