@@ -51,6 +51,24 @@ def save_preferences(style_dict):
 def main():
     st.title("🎵 GG Data Visualiser")
 
+    st.markdown("""
+    <style>
+    .stApp {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+    }
+    .stSidebar {
+        background-color: #111111 !important;
+    }
+    .stSelectbox label, .stMultiSelect label, .stFileUploader label {
+        color: #ffffff !important;
+    }
+    .stMarkdown {
+        color: #ffffff !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Initialize session state variables if they don't exist
     if 'style' not in st.session_state:
         # Try to load saved preferences
