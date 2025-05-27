@@ -282,6 +282,65 @@ def main():
         # Apply both regular filters and date range filters
         filtered_data = data_processor.filter_data(filters, date_range_filters)
 
+        # Metric Override Tab - AFTER FILTERS, BEFORE CHARTS
+        st.subheader("⚙️ Advanced Settings")
+        with st.expander("Metric Aggregation & Formatting Override", expanded=False):
+            st.markdown("**Configure how metrics are calculated and displayed:**")
+
+            # Initialize session state for overrides if not exists
+            if 'metric_overrides' not in st.session_state:
+                st.session_state.metric_overrides = {}
+
+            for metric in metrics:
+                col1, col2, col3 = st.columns([2, 1, 1])
+
+                with col1:
+                    # Get current setting (either overridden or auto-detected)
+                    if metric in st.session_state.metric_overrides:
+                        current_agg = st.session_state.metric_overrides[metric]['agg']
+                    else:
+                        current_agg = data_processor.get_aggregation_type(metric)
+
+                    new_agg = st.selectbox(
+                        f"{metric} - Aggregation",
+                        options=["sum", "average"],
+                        index=1 if current_agg == "average" else 0,
+                        key=f"agg_{metric}"
+                    )
+
+                with col2:
+                    # Get current type (either overridden or auto-detected)
+                    if metric in st.session_state.metric_overrides:
+                        current_type = st.session_state.metric_overrides[metric]['type']
+                    else:
+                        current_type = data_processor.get_metric_type(metric)
+
+                    new_type = st.selectbox(
+                        "Format Type",
+                        options=["number", "currency", "percentage"],
+                        index=["number", "currency", "percentage"].index(current_type),
+                        key=f"type_{metric}"
+                    )
+
+                with col3:
+                    decimal_places = st.selectbox(
+                        "Decimals",
+                        options=[0, 1, 2, 3],
+                        index=2,
+                        key=f"decimals_{metric}"
+                    )
+
+                # Apply overrides to data processor
+                data_processor.aggregation_types[metric] = new_agg
+                data_processor.metric_types[metric] = new_type
+
+                # Store in session state
+                st.session_state.metric_overrides[metric] = {
+                    'agg': new_agg,
+                    'type': new_type,
+                    'decimals': decimal_places
+                }
+
         # Show applied filters
         if filters or date_range_filters:
             with st.expander("Applied Filters", expanded=True):
@@ -428,6 +487,12 @@ def main():
                 st.error(f"Error saving chart: {e}")
 
         # MOVED Data Preview to after the charts
+
+        # Metric Override Tab
+        # Metric Override Tab
+        # Metric Override Tab
+
+
         st.write("Data Preview:")
         st.dataframe(filtered_data.head())
 

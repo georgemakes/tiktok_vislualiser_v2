@@ -98,7 +98,7 @@ class DataProcessor:
 
         # Define patterns for different types of metrics
         currency_patterns = [
-            'cost', 'spend', 'revenue', 'budget', 'value', 'conversion_value', 'roas', 'rar'
+            'cost', 'spend', 'revenue', 'budget', 'value', 'conversion_value', 'roas'
         ]
 
         # Cost-per-X metrics (currency but should be averaged, not summed)
@@ -106,18 +106,19 @@ class DataProcessor:
             'cpm', 'cpc', 'cpa', 'cpv', 'cpl', 'cpi', 'cost_per'
         ]
 
-        percentage_patterns = [
-            'cvr', 'ctr', 'rate', 'percent', '%', 'ratio', 'frequency',
-            'engagement_rate', 'conversion_rate', 'view_rate', 'completion_rate',
-            'bounce_rate', 'click_through_rate'
-        ]
-
-        # Count/volume metrics (should be summed)
         count_patterns = [
             'impressions', 'clicks', 'views', 'reach', 'conversions', 'leads',
             'purchases', 'installs', 'downloads', 'shares', 'likes', 'comments',
             'sessions', 'users', 'visitors', 'pageviews', 'orders', 'transactions'
         ]
+
+        percentage_patterns = [
+            'cvr', 'ctr', 'rate', 'percent', '%', 'ratio', 'frequency', 'roas',
+            'engagement_rate', 'conversion_rate', 'view_rate', 'completion_rate',
+            'bounce_rate', 'click_through_rate'
+        ]
+
+        # Count/volume metrics (should be summed)
 
         # Time-based metrics (should be averaged)
         time_patterns = [
@@ -129,7 +130,10 @@ class DataProcessor:
             metric_lower = metric.lower()
 
             # Check aggregation type and metric type
-            if any(pattern in metric_lower for pattern in cost_per_patterns):
+            if 'roas' in metric_lower:
+                self.metric_types[metric] = 'percentage'
+                self.aggregation_types[metric] = 'average'
+            elif any(pattern in metric_lower for pattern in cost_per_patterns):
                 self.metric_types[metric] = 'currency'
                 self.aggregation_types[metric] = 'average'  # CPCs should be averaged
             elif any(pattern in metric_lower for pattern in currency_patterns):

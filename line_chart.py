@@ -442,7 +442,9 @@ class LineChart:
                 ),
                 tickfont=dict(color=self.style.text_color),
                 overlaying="y",
-                side="right"
+                side="right",
+                nticks=5,  # Match primary axis tick count
+                showgrid=False  # Hide secondary grid lines
             )
 
             # Add specific formatting for different metric types
