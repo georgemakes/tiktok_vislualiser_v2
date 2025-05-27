@@ -108,6 +108,69 @@ def main():
         dimensions = data_processor.get_dimensions()
         date_columns = data_processor.get_date_columns()
 
+        if not date_columns:
+            st.warning("⚠️ No 'By Day' column detected. Please select a date column:")
+
+            # Get all columns and let user pick one as date
+            all_columns = list(data.columns)
+            selected_date_col = st.selectbox(
+                "Select Date Column",
+                options=all_columns,
+                help="Choose which column contains your dates"
+            )
+
+            if selected_date_col and st.button("Convert to Date"):
+                try:
+                    # Show preview of data before conversion
+                    st.write("**Sample values from selected column:**")
+                    st.write(data_processor.data[selected_date_col].head().tolist())
+
+                    # Try multiple date formats for better conversion
+                    date_formats = [
+                        '%Y-%m-%d',  # 2024-01-01
+                        '%d/%m/%Y',  # 01/01/2024
+                        '%m/%d/%Y',  # 01/01/2024
+                        '%d-%m-%Y',  # 01-01-2024
+                        '%Y-%m-%d %H:%M:%S',  # With time
+                        None  # Let pandas infer
+                    ]
+
+                    converted = False
+                    for fmt in date_formats:
+                        try:
+                            if fmt:
+                                data_processor.data[selected_date_col] = pd.to_datetime(
+                                    data_processor.data[selected_date_col],
+                                    format=fmt,
+                                    errors='coerce'
+                                )
+                            else:
+                                data_processor.data[selected_date_col] = pd.to_datetime(
+                                    data_processor.data[selected_date_col],
+                                    errors='coerce',
+                                    infer_datetime_format=True
+                                )
+
+                            # Check if conversion worked
+                            if data_processor.data[selected_date_col].notna().sum() > 0:
+                                converted = True
+                                break
+                        except:
+                            continue
+
+                    if converted:
+                        data_processor.date_columns.append(selected_date_col)
+                        date_columns = data_processor.get_date_columns()
+                        st.success(f"✅ Converted '{selected_date_col}' to date column!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Could not convert column to dates. Check the format.")
+
+                except Exception as e:
+                    st.error(f"❌ Conversion failed: {str(e)}")
+
+        # Continue with existing filters and charts...
+
         # ----- SIDEBAR ORGANIZATION -----
         st.sidebar.header("Data Visualization")
 
