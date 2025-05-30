@@ -555,6 +555,58 @@ def main():
         # Metric Override Tab
         # Metric Override Tab
 
+        # OVERVIEW METRICS SECTION - PASTE HERE
+        st.markdown("---")
+        st.subheader("📊 Campaign Overview")
+
+        # Calculate overview metrics
+        overview_metrics = {}
+        for metric in metrics:
+            agg_type = data_processor.get_aggregation_type(metric)
+            if agg_type == 'average':
+                overview_metrics[metric] = filtered_data[metric].mean()
+            else:
+                overview_metrics[metric] = filtered_data[metric].sum()
+
+        # Display in columns with custom styling
+        cols = st.columns(min(4, len(overview_metrics)))
+
+        for i, (metric, value) in enumerate(overview_metrics.items()):
+            with cols[i % 4]:
+                # Format based on metric type
+                metric_type = data_processor.get_metric_type(metric)
+
+                if metric_type == 'currency':
+                    formatted_value = f"£{value:,.2f}"
+                elif metric_type == 'percentage':
+                    formatted_value = f"{value:.2f}%"
+                else:
+                    if value >= 1000000:
+                        formatted_value = f"{value / 1000000:.1f}M"
+                    elif value >= 1000:
+                        formatted_value = f"{value / 1000:.1f}K"
+                    else:
+                        formatted_value = f"{value:,.0f}"
+
+                # Custom styling with TikTok red and big text
+                st.markdown(f"""
+                <div style="
+                    background-color: #111111; 
+                    padding: 20px; 
+                    border-radius: 10px; 
+                    border-left: 4px solid #fe2c56;
+                    margin-bottom: 10px;
+                ">
+                    <h4 style="color: #ffffff; margin: 0; font-size: 14px;">
+                        {metric.replace('_', ' ').title()}
+                    </h4>
+                    <h1 style="color: #fe2c56; margin: 5px 0 0 0; font-size: 36px; font-weight: bold;">
+                        {formatted_value}
+                    </h1>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.write("Data Preview:")
 
         st.write("Data Preview:")
         st.dataframe(filtered_data.head())
