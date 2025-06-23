@@ -128,9 +128,11 @@ def main():
                     # Try multiple date formats for better conversion
                     date_formats = [
                         '%Y-%m-%d',  # 2024-01-01
+                        '%Y-%m',  # 2025-01 (month only)
                         '%d/%m/%Y',  # 01/01/2024
                         '%m/%d/%Y',  # 01/01/2024
                         '%d-%m-%Y',  # 01-01-2024
+                        '%Y/%m',  # 2025/01 (month only)
                         '%Y-%m-%d %H:%M:%S',  # With time
                         None  # Let pandas infer
                     ]

@@ -51,9 +51,11 @@ class DataProcessor:
         """
         date_patterns = [
             r'\d{4}-\d{1,2}-\d{1,2}',  # YYYY-MM-DD
+            r'\d{4}-\d{1,2}',  # YYYY-MM (month only)
             r'\d{1,2}-\d{1,2}-\d{4}',  # DD-MM-YYYY or MM-DD-YYYY
             r'\d{1,2}/\d{1,2}/\d{4}',  # DD/MM/YYYY or MM/DD/YYYY
             r'\d{1,2}/\d{1,2}/\d{2}',  # DD/MM/YY or MM/DD/YY
+            r'\d{4}/\d{1,2}',  # YYYY/MM (month only)
             r'\d{1,2}\s+[a-zA-Z]{3,}\s+\d{4}',  # DD Month YYYY
             r'[a-zA-Z]{3,}\s+\d{1,2},?\s+\d{4}'  # Month DD, YYYY
         ]
