@@ -290,17 +290,62 @@ def main():
             # Font and size settings
             style.title_font_size = style_container.slider("Title Font Size", 10, 24, style.title_font_size)
             style.text_font_size = style_container.slider("Text Font Size", 8, 18, style.text_font_size)
+            # Shuffle Colors Button - RIGHT BEFORE CHARTS
 
             # Chart-specific settings
             if chart_type == "Line Chart":
                 with style_container.expander("Line Chart Style", expanded=True):
-                    style.line_color = st.color_picker("Line Color", style.line_color)
-                    style.line_width = st.slider("Line Width", 1, 5, style.line_width)
+                    style.line_width = st.slider("Line Width", 1, 5, style.line_width, key="line_width_slider")
+
+                    # Multi-line colors from style guide
+                    st.markdown("**Line Colors:**")
+
+                    # Initialize session state with style guide colors
+                    if 'custom_line_colors' not in st.session_state:
+                        st.session_state.custom_line_colors = style.color_sequence[:8].copy()
+
+                    # Randomize colors button (moved to top so it updates before color pickers)
+                    # Randomize colors button (no rerun)
+                    if st.button("🎲 Randomize Colors", key="randomize_multiline_colors"):
+                        import random
+                        tiktok_palette = style.bar_colors.copy()
+                        new_colors = random.sample(tiktok_palette, min(8, len(tiktok_palette)))
+
+                        # Update session state
+                        st.session_state.custom_line_colors = new_colors
+                        style.color_sequence = new_colors
+                        style.line_color = new_colors[0]
+
+                        # Show success message instead of rerunning
+                        st.success("Colors shuffled!")
+
+                    # Show color pickers for first 8 colors
+                    for i in range(8):
+                        # Default to style guide colors if session state is shorter
+                        default_color = style.color_sequence[i] if i < len(style.color_sequence) else "#fe2c56"
+
+                        color = st.color_picker(
+                            f"Line {i + 1} Color",
+                            st.session_state.custom_line_colors[i] if i < len(
+                                st.session_state.custom_line_colors) else default_color,
+                            key=f"multiline_color_{i}"
+                        )
+
+                        # Update session state
+                        if len(st.session_state.custom_line_colors) <= i:
+                            st.session_state.custom_line_colors.append(color)
+                        else:
+                            st.session_state.custom_line_colors[i] = color
+
+                    # Apply colors to style - Line 1 becomes the primary color
+                    style.color_sequence = st.session_state.custom_line_colors.copy()
+                    style.line_color = st.session_state.custom_line_colors[0]  # Line 1 = Primary
 
                     # Line specific options
-                    style.show_markers = st.checkbox("Show Data Points", value=style.show_markers)
+                    style.show_markers = st.checkbox("Show Data Points", value=style.show_markers,
+                                                     key="show_data_points_line")
                     if style.show_markers:
-                        style.marker_size = st.slider("Marker Size", 4, 12, style.marker_size)
+                        style.marker_size = st.slider("Marker Size", 4, 12, style.marker_size, key="marker_size_line")
 
                     line_shape_options = {
                         "Linear": "linear",
@@ -311,7 +356,8 @@ def main():
                     selected_shape = st.selectbox(
                         "Line Shape",
                         options=list(line_shape_options.keys()),
-                        index=list(line_shape_options.values()).index(style.line_shape)
+                        index=list(line_shape_options.values()).index(style.line_shape),
+                        key="line_shape_selector"
                     )
                     style.line_shape = line_shape_options[selected_shape]
 
