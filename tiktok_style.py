@@ -162,3 +162,4 @@ class TikTokStyle:
             if hasattr(style, key):
                 setattr(style, key, value)
         return style
+
