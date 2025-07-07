@@ -214,7 +214,8 @@ class LineChart:
                         hover_template = "%{y:.2f}%"
 
                     # Define a contrasting color for the secondary axis
-                    secondary_color = "#ff0050" if self.style.line_color != "#ff0050" else "#00f2ea"
+                    # Get secondary color from session state if available
+                    secondary_color = self.style.secondary_axis_color
 
                     # Add trace for secondary y-axis
                     self.fig.add_trace(
@@ -305,7 +306,7 @@ class LineChart:
             segments = self._split_into_continuous_segments(group_data, x_axis)
 
             # Get the color for this group
-            color = self.style.color_sequence[i % len(self.style.color_sequence)]
+            color = self.style.secondary_axis_color
 
             # Create hover template based on metric type
             hover_template = "%{y}"
@@ -369,9 +370,10 @@ class LineChart:
             hover_template = "%{y:.2f}%"
 
         # Define the color based on primary or secondary axis
+        # Define the color based on primary or secondary axis
         color = self.style.line_color
         if is_secondary:
-            color = "#ff0050" if self.style.line_color != "#ff0050" else "#00f2ea"
+            color = self.style.secondary_axis_color  # ← Use the custom color
 
         # Add each segment as a separate trace
         for i, segment in enumerate(segments):

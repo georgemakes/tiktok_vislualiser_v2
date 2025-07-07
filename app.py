@@ -304,24 +304,20 @@ def main():
                     if 'custom_line_colors' not in st.session_state:
                         st.session_state.custom_line_colors = style.color_sequence[:8].copy()
 
-                    # Randomize colors button (moved to top so it updates before color pickers)
-                    # Randomize colors button (no rerun)
+                    # Randomize colors button
                     if st.button("🎲 Randomize Colors", key="randomize_multiline_colors"):
                         import random
                         tiktok_palette = style.bar_colors.copy()
                         new_colors = random.sample(tiktok_palette, min(8, len(tiktok_palette)))
 
-                        # Update session state
                         st.session_state.custom_line_colors = new_colors
                         style.color_sequence = new_colors
                         style.line_color = new_colors[0]
-
-                        # Show success message instead of rerunning
-                        st.success("Colors shuffled!")
+                        style.secondary_axis_color = random.choice(tiktok_palette)
+                        st.success("🎨 Colors randomized!")
 
                     # Show color pickers for first 8 colors
                     for i in range(8):
-                        # Default to style guide colors if session state is shorter
                         default_color = style.color_sequence[i] if i < len(style.color_sequence) else "#fe2c56"
 
                         color = st.color_picker(
@@ -331,15 +327,24 @@ def main():
                             key=f"multiline_color_{i}"
                         )
 
-                        # Update session state
                         if len(st.session_state.custom_line_colors) <= i:
                             st.session_state.custom_line_colors.append(color)
                         else:
                             st.session_state.custom_line_colors[i] = color
 
-                    # Apply colors to style - Line 1 becomes the primary color
+                    # Secondary axis color picker
+                    st.markdown("**Secondary Y-Axis Color:**")
+                    style.secondary_axis_color = st.color_picker(
+                        "Secondary Axis Line Color",
+                        style.secondary_axis_color,
+                        key="secondary_axis_color_picker"
+                    )
+
+                    # Apply colors to style
                     style.color_sequence = st.session_state.custom_line_colors.copy()
-                    style.line_color = st.session_state.custom_line_colors[0]  # Line 1 = Primary
+                    style.line_color = st.session_state.custom_line_colors[0]
+
+                    # Line options continue...
 
                     # Line specific options
                     style.show_markers = st.checkbox("Show Data Points", value=style.show_markers,

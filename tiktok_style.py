@@ -10,6 +10,7 @@ class TikTokStyle:
         self.text_font_size = 12
         self.line_width = 3
         self.axis_line_width = 1
+        self.secondary_axis_color = "#ff0050"  # Default secondary color
 
         # Chart-specific styling
         self.colorscale = "viridis"  # For heatmap
@@ -150,7 +151,8 @@ class TikTokStyle:
             "color_sequence": self.color_sequence,
             "show_markers": self.show_markers,
             "line_shape": self.line_shape,
-            "hide_zero_values": self.hide_zero_values
+            "hide_zero_values": self.hide_zero_values,
+            "secondary_axis_color": self.secondary_axis_color
         }
 
     @classmethod
