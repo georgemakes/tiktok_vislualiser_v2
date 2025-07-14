@@ -616,65 +616,541 @@ def main():
         # Metric Override Tab
         # Metric Override Tab
 
-        # OVERVIEW METRICS SECTION - PASTE HERE
+        # OVERVIEW METRICS SECTION - ENHANCED FOR GROUPING
         st.markdown("---")
-        st.subheader("📊 Campaign Overview")
 
-        # Calculate overview metrics
-        overview_metrics = {}
-        for metric in metrics:
-            agg_type = data_processor.get_aggregation_type(metric)
-            if agg_type == 'average':
-                overview_metrics[metric] = filtered_data[metric].mean()
-            else:
-                overview_metrics[metric] = filtered_data[metric].sum()
+        # Metric selection for overview
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.subheader("📊 Campaign Overview")
+        with col2:
+            if st.button("⚙️ Configure Metrics", key="config_overview_metrics"):
+                if 'show_metric_config' not in st.session_state:
+                    st.session_state.show_metric_config = False
+                st.session_state.show_metric_config = not st.session_state.show_metric_config
 
-        # Display in columns with custom styling
-        cols = st.columns(min(4, len(overview_metrics)))
+        # Metric configuration
+        if st.session_state.get('show_metric_config', False):
+            st.markdown("**Select metrics to display in overview:**")
 
-        for i, (metric, value) in enumerate(overview_metrics.items()):
-            with cols[i % 4]:
-                # Format based on metric type
-                metric_type = data_processor.get_metric_type(metric)
+            # Initialize selected metrics if not exists
+            if 'selected_overview_metrics' not in st.session_state:
+                st.session_state.selected_overview_metrics = metrics.copy()
 
-                if metric_type == 'currency':
-                    formatted_value = f"£{value:,.2f}"
-                elif metric_type == 'percentage':
-                    formatted_value = f"{value:.2f}%"
-                else:
-                    if value >= 1000000:
-                        formatted_value = f"{value / 1000000:.1f}M"
-                    elif value >= 1000:
-                        formatted_value = f"{value / 1000:.1f}K"
+            # Create removable metric tags
+            metric_cols = st.columns(4)
+            for i, metric in enumerate(metrics):
+                with metric_cols[i % 4]:
+                    is_selected = metric in st.session_state.selected_overview_metrics
+
+                    if st.checkbox(
+                            metric.replace('_', ' ').title(),
+                            value=is_selected,
+                            key=f"overview_metric_{metric}"
+                    ):
+                        if metric not in st.session_state.selected_overview_metrics:
+                            st.session_state.selected_overview_metrics.append(metric)
                     else:
-                        formatted_value = f"{value:,.0f}"
+                        if metric in st.session_state.selected_overview_metrics:
+                            st.session_state.selected_overview_metrics.remove(metric)
 
-                # Custom styling with TikTok red and big text
-                st.markdown(f"""
-                <div style="
-                    background-color: #111111; 
-                    padding: 20px; 
-                    border-radius: 10px; 
-                    border-left: 4px solid #fe2c56;
-                    margin-bottom: 10px;
-                ">
-                    <h4 style="color: #ffffff; margin: 0; font-size: 14px;">
-                        {metric.replace('_', ' ').title()}
-                    </h4>
-                    <h1 style="color: #fe2c56; margin: 5px 0 0 0; font-size: 36px; font-weight: bold;">
-                        {formatted_value}
-                    </h1>
-                </div>
-                """, unsafe_allow_html=True)
+            # Quick action buttons
+            button_cols = st.columns(3)
+            with button_cols[0]:
+                if st.button("Select All", key="select_all_metrics"):
+                    st.session_state.selected_overview_metrics = metrics.copy()
+                    st.rerun()
+            with button_cols[1]:
+                if st.button("Select None", key="select_no_metrics"):
+                    st.session_state.selected_overview_metrics = []
+                    st.rerun()
+            with button_cols[2]:
+                if st.button("Reset to Default", key="reset_metrics"):
+                    st.session_state.selected_overview_metrics = metrics.copy()
+                    st.rerun()
 
+        # Get selected metrics for display
+        display_metrics = st.session_state.get('selected_overview_metrics', metrics)
+
+        if not display_metrics:
+            st.info("🔍 No metrics selected for overview. Click 'Configure Metrics' to select some.")
+        else:
+            # Calculate overview metrics
+            if group_by and group_by in filtered_data.columns:
+                # GROUPED OVERVIEW WITH TOTAL TAB
+                st.markdown(f"**Metrics by {group_by}:**")
+
+                # Get unique groups
+                groups = filtered_data[group_by].unique()
+
+                # Create tabs including Total tab
+                tab_names = ["📋 Total"] + [str(group) for group in groups]
+                tabs = st.tabs(tab_names)
+
+                # Store all group metrics for comparison
+                comparison_data = []
+
+                # TOTAL TAB
+                with tabs[0]:
+                    st.markdown("**Overall Totals Across All Groups:**")
+
+                    # Calculate total metrics
+                    total_metrics = {}
+                    for metric in display_metrics:
+                        agg_type = data_processor.get_aggregation_type(metric)
+                        if agg_type == 'average':
+                            total_metrics[metric] = filtered_data[metric].mean()
+                        else:
+                            total_metrics[metric] = filtered_data[metric].sum()
+
+                    # Display total metrics
+                    cols = st.columns(min(4, len(total_metrics)))
+
+                    for j, (metric, value) in enumerate(total_metrics.items()):
+                        with cols[j % 4]:
+                            # Format based on metric type
+                            metric_type = data_processor.get_metric_type(metric)
+
+                            if metric_type == 'currency':
+                                formatted_value = f"£{value:,.2f}"
+                            elif metric_type == 'percentage':
+                                formatted_value = f"{value:.2f}%"
+                            else:
+                                if value >= 1000000:
+                                    formatted_value = f"{value / 1000000:.1f}M"
+                                elif value >= 1000:
+                                    formatted_value = f"{value / 1000:.1f}K"
+                                else:
+                                    formatted_value = f"{value:,.0f}"
+
+                            # Use TikTok pink for total
+                            st.markdown(f"""
+                            <div style="
+                                background-color: #111111; 
+                                padding: 15px; 
+                                border-radius: 8px; 
+                                border-left: 4px solid #fe2c56;
+                                margin-bottom: 10px;
+                            ">
+                                <h5 style="color: #ffffff; margin: 0; font-size: 12px;">
+                                    {metric.replace('_', ' ').title()}
+                                </h5>
+                                <h2 style="color: #fe2c56; margin: 5px 0 0 0; font-size: 28px; font-weight: bold;">
+                                    {formatted_value}
+                                </h2>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                # GROUP TABS
+                for i, (tab, group_value) in enumerate(zip(tabs[1:], groups)):
+                    with tab:
+                        # Filter data for this group
+                        group_data = filtered_data[filtered_data[group_by] == group_value]
+
+                        # Calculate metrics for this group
+                        group_metrics = {}
+                        for metric in display_metrics:
+                            agg_type = data_processor.get_aggregation_type(metric)
+                            if agg_type == 'average':
+                                group_metrics[metric] = group_data[metric].mean()
+                            else:
+                                group_metrics[metric] = group_data[metric].sum()
+
+                        # Store for comparison
+                        comparison_data.append({group_by: group_value, **group_metrics})
+
+                        # Display metrics in cards with group colors
+                        cols = st.columns(min(4, len(group_metrics)))
+                        group_color = st.session_state.custom_line_colors[i % len(
+                            st.session_state.custom_line_colors)] if 'custom_line_colors' in st.session_state else \
+                        style.color_sequence[i % len(style.color_sequence)]
+
+                        for j, (metric, value) in enumerate(group_metrics.items()):
+                            with cols[j % 4]:
+                                # Format based on metric type
+                                metric_type = data_processor.get_metric_type(metric)
+
+                                if metric_type == 'currency':
+                                    formatted_value = f"£{value:,.2f}"
+                                elif metric_type == 'percentage':
+                                    formatted_value = f"{value:.2f}%"
+                                else:
+                                    if value >= 1000000:
+                                        formatted_value = f"{value / 1000000:.1f}M"
+                                    elif value >= 1000:
+                                        formatted_value = f"{value / 1000:.1f}K"
+                                    else:
+                                        formatted_value = f"{value:,.0f}"
+
+                                # Custom styling with group color
+                                st.markdown(f"""
+                                <div style="
+                                    background-color: #111111; 
+                                    padding: 15px; 
+                                    border-radius: 8px; 
+                                    border-left: 4px solid {group_color};
+                                    margin-bottom: 10px;
+                                ">
+                                    <h5 style="color: #ffffff; margin: 0; font-size: 12px;">
+                                        {metric.replace('_', ' ').title()}
+                                    </h5>
+                                    <h2 style="color: {group_color}; margin: 5px 0 0 0; font-size: 24px; font-weight: bold;">
+                                        {formatted_value}
+                                    </h2>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                # Comparison table (after tabs)
+                # Comparison table (after tabs) WITH FLIP OPTION
+                if comparison_data and len(comparison_data) > 1:
+                    st.markdown("### 📋 Comparison Table")
+
+                    # Add flip comparison option
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        comparison_df = pd.DataFrame(comparison_data)
+                    with col2:
+                        if st.button("🔄 Flip Comparison", key="flip_comparison"):
+                            if 'comparison_flipped' not in st.session_state:
+                                st.session_state.comparison_flipped = False
+                            st.session_state.comparison_flipped = not st.session_state.comparison_flipped
+
+                    # Format the dataframe for display
+                    formatted_df = comparison_df.copy()
+                    for metric in display_metrics:
+                        if metric in formatted_df.columns:
+                            metric_type = data_processor.get_metric_type(metric)
+                            if metric_type == 'currency':
+                                formatted_df[metric] = formatted_df[metric].apply(lambda x: f"£{x:,.2f}")
+                            elif metric_type == 'percentage':
+                                formatted_df[metric] = formatted_df[metric].apply(lambda x: f"{x:.2f}%")
+                            else:
+                                formatted_df[metric] = formatted_df[metric].apply(
+                                    lambda x: f"{x:,.0f}" if x >= 1 else f"{x:.2f}")
+
+                    st.dataframe(formatted_df, use_container_width=True)
+
+                    # Calculate % changes WITH FLIP LOGIC
+                    if len(comparison_data) > 1:
+                        # Determine base group based on flip state
+                        flipped = st.session_state.get('comparison_flipped', False)
+
+                        if flipped:
+                            st.markdown(f"### 📈 % Change vs Last Group ({comparison_data[-1][group_by]})")
+                            base_group = comparison_data[-1]  # Use last group as base
+                            compare_groups = comparison_data[:-1]  # Compare all others to last
+                        else:
+                            st.markdown(f"### 📈 % Change vs First Group ({comparison_data[0][group_by]})")
+                            base_group = comparison_data[0]  # Use first group as base
+                            compare_groups = comparison_data[1:]  # Compare all others to first
+
+                        change_data = []
+                        for group_data in compare_groups:
+                            change_row = {group_by: group_data[group_by]}
+                            for metric in display_metrics:
+                                if metric in base_group and metric in group_data:
+                                    base_value = base_group[metric]
+                                    current_value = group_data[metric]
+                                    if base_value != 0:
+                                        pct_change = ((current_value - base_value) / base_value) * 100
+                                        # Color code the percentage
+                                        if pct_change > 0:
+                                            change_row[metric] = f"🟢 +{pct_change:.1f}%"
+                                        elif pct_change < 0:
+                                            change_row[metric] = f"🔴 {pct_change:.1f}%"
+                                        else:
+                                            change_row[metric] = f"⚪ 0.0%"
+                                    else:
+                                        change_row[metric] = "❓ N/A"
+                            change_data.append(change_row)
+
+                        if change_data:
+                            change_df = pd.DataFrame(change_data)
+                            st.dataframe(change_df, use_container_width=True)
+
+
+            else:
+                # NON-GROUPED OVERVIEW - Nice cards like before
+                overview_metrics = {}
+                for metric in display_metrics:
+                    agg_type = data_processor.get_aggregation_type(metric)
+                    if agg_type == 'average':
+                        overview_metrics[metric] = filtered_data[metric].mean()
+                    else:
+                        overview_metrics[metric] = filtered_data[metric].sum()
+                # Display in columns with nice cards
+                cols = st.columns(min(4, len(overview_metrics)))
+                for i, (metric, value) in enumerate(overview_metrics.items()):
+                    with cols[i % 4]:
+                        # Format based on metric type
+                        metric_type = data_processor.get_metric_type(metric)
+                        if metric_type == 'currency':
+                            formatted_value = f"£{value:,.2f}"
+                        elif metric_type == 'percentage':
+                            formatted_value = f"{value:.2f}%"
+                        else:
+                            if value >= 1000000:
+                                formatted_value = f"{value / 1000000:.1f}M"
+                            elif value >= 1000:
+                                formatted_value = f"{value / 1000:.1f}K"
+                            else:
+                                formatted_value = f"{value:,.0f}"
+                        # Custom styling with TikTok colors (sa as grouped)
+                        st.markdown(f"""
+                            <div style="
+                                background-color: #111111; 
+                                padding: 20px; 
+                                border-radius: 10px; 
+                                border-left: 4px solid #fe2c56;
+                                margin-bottom: 10px;
+                            ">
+                                <h4 style="color: #ffffff; margin: 0; font-size: 14px;">
+                                    {metric.replace('_', ' ').title()}
+                                </h4>
+                                <h1 style="color: #fe2c56; margin: 5px 0 0 0; font-size: 36px; font-weight: bold;">
+                                    {formatted_value}
+                                </h1>
+                            </div>
+                            """, unsafe_allow_html=True)
         st.write("Data Preview:")
 
-        st.write("Data Preview:")
         st.dataframe(filtered_data.head())
 
         # Show row count
         st.write(f"**Rows in filtered data:** {len(filtered_data)}")
 
+        # DATA EXPORT REPORT BUTTON
+        st.markdown("---")
+        st.subheader("📋 Export Full Report")
+
+        col1, col2, col3 = st.columns([2, 1, 1])
+
+        with col1:
+            st.markdown("**Export complete analysis including data, filters, charts, and insights**")
+
+        with col2:
+            export_format = st.selectbox("Format", ["Detailed Text", "JSON Data", "CSV + Summary"])
+
+        with col3:
+            if st.button("📤 Generate Report", key="export_full_report"):
+                # Generate comprehensive report
+                report_data = {
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "file_info": {
+                        "filename": uploaded_file.name if uploaded_file else "Unknown",
+                        "total_rows": len(data),
+                        "filtered_rows": len(filtered_data),
+                        "date_range": {
+                            col: {
+                                "start": data_processor.get_date_range(col)[0].strftime("%Y-%m-%d") if
+                                data_processor.get_date_range(col)[0] else None,
+                                "end": data_processor.get_date_range(col)[1].strftime("%Y-%m-%d") if
+                                data_processor.get_date_range(col)[1] else None
+                            } for col in date_columns
+                        }
+                    },
+                    "applied_filters": {
+                        "date_filters": {col: f"{start.date()} to {end.date()}" for col, (start, end) in
+                                         date_range_filters.items()},
+                        "dimension_filters": {col: values for col, values in filters.items() if values}
+                    },
+                    "chart_configuration": {
+                        "type": chart_type,
+                        "x_axis": locals().get('x_axis', 'Not set'),
+                        "y_axis": locals().get('y_axis', 'Not set'),
+                        "secondary_y_axis": locals().get('secondary_y_axis', None),
+                        "group_by": locals().get('group_by', None),
+                        "hide_zero_values": style.hide_zero_values,
+                        "show_markers": style.show_markers
+                    },
+                    "data_insights": {
+                        "metrics_summary": {},
+                        "top_performers": {},
+                        "data_quality": {}
+                    },
+                    "overview_metrics": {},
+                    "raw_data_sample": filtered_data.head(100).to_dict('records') if len(filtered_data) > 0 else []
+                }
+
+                # Calculate insights
+                for metric in display_metrics:
+                    metric_data = filtered_data[metric].dropna()
+                    if len(metric_data) > 0:
+                        agg_type = data_processor.get_aggregation_type(metric)
+                        metric_type = data_processor.get_metric_type(metric)
+
+                        total_value = metric_data.sum() if agg_type == 'sum' else metric_data.mean()
+
+                        report_data["overview_metrics"][metric] = {
+                            "value": float(total_value),
+                            "type": metric_type,
+                            "aggregation": agg_type,
+                            "formatted": f"£{total_value:,.2f}" if metric_type == 'currency' else f"{total_value:.2f}%" if metric_type == 'percentage' else f"{total_value:,.0f}"
+                        }
+
+                        report_data["data_insights"]["metrics_summary"][metric] = {
+                            "min": float(metric_data.min()),
+                            "max": float(metric_data.max()),
+                            "mean": float(metric_data.mean()),
+                            "median": float(metric_data.median()),
+                            "std": float(metric_data.std()) if len(metric_data) > 1 else 0,
+                            "null_count": int(filtered_data[metric].isnull().sum()),
+                            "zero_count": int((filtered_data[metric] == 0).sum())
+                        }
+
+                # Top performers by group
+                if group_by and group_by in filtered_data.columns:
+                    for metric in display_metrics[:3]:  # Top 3 metrics only
+                        group_performance = filtered_data.groupby(group_by)[metric].agg(
+                            data_processor.get_aggregation_type(metric) if data_processor.get_aggregation_type(
+                                metric) == 'mean' else 'sum'
+                        ).sort_values(ascending=False)
+
+                        report_data["data_insights"]["top_performers"][metric] = {
+                            "best": {
+                                "group": str(group_performance.index[0]),
+                                "value": float(group_performance.iloc[0])
+                            },
+                            "worst": {
+                                "group": str(group_performance.index[-1]),
+                                "value": float(group_performance.iloc[-1])
+                            }
+                        }
+
+                # Data quality insights
+                report_data["data_insights"]["data_quality"] = {
+                    "completeness": {
+                        metric: f"{(1 - filtered_data[metric].isnull().sum() / len(filtered_data)) * 100:.1f}%"
+                        for metric in metrics
+                    },
+                    "date_coverage": {
+                        col: f"{(data_processor.get_date_range(col)[1] - data_processor.get_date_range(col)[0]).days} days"
+                        for col in date_columns if data_processor.get_date_range(col)[0]
+                    }
+                }
+
+                if export_format == "Detailed Text":
+                    # Generate human-readable report
+                    report_text = f"""
+# TikTok Ad Analysis Report
+Generated: {report_data['timestamp']}
+
+## 📊 Data Overview
+- **File**: {report_data['file_info']['filename']}
+- **Total Records**: {report_data['file_info']['total_rows']:,}
+- **Filtered Records**: {report_data['file_info']['filtered_rows']:,}
+- **Data Completeness**: {(report_data['file_info']['filtered_rows'] / report_data['file_info']['total_rows'] * 100):.1f}% of original data
+
+## 🔍 Applied Filters
+"""
+
+                    if report_data['applied_filters']['date_filters']:
+                        report_text += "**Date Filters:**\n"
+                        for col, range_str in report_data['applied_filters']['date_filters'].items():
+                            report_text += f"- {col}: {range_str}\n"
+
+                    if report_data['applied_filters']['dimension_filters']:
+                        report_text += "\n**Dimension Filters:**\n"
+                        for col, values in report_data['applied_filters']['dimension_filters'].items():
+                            report_text += f"- {col}: {', '.join(map(str, values))}\n"
+
+                    report_text += f"""
+## 📈 Chart Configuration
+- **Type**: {report_data['chart_configuration']['type']}
+- **X-Axis**: {report_data['chart_configuration']['x_axis']}
+- **Y-Axis**: {report_data['chart_configuration']['y_axis']}"""
+
+                    if report_data['chart_configuration']['secondary_y_axis']:
+                        report_text += f"\n- **Secondary Y-Axis**: {report_data['chart_configuration']['secondary_y_axis']}"
+
+                    if report_data['chart_configuration']['group_by']:
+                        report_text += f"\n- **Grouped By**: {report_data['chart_configuration']['group_by']}"
+
+                    report_text += f"""
+- **Hide Zero Values**: {report_data['chart_configuration']['hide_zero_values']}
+
+## 📊 Key Metrics Summary
+"""
+
+                    for metric, data in report_data['overview_metrics'].items():
+                        report_text += f"**{metric.replace('_', ' ').title()}**: {data['formatted']} ({data['aggregation']})\n"
+
+                    report_text += "\n## 🎯 Performance Insights\n"
+
+                    for metric, performers in report_data['data_insights']['top_performers'].items():
+                        report_text += f"**{metric.replace('_', ' ').title()}**:\n"
+                        report_text += f"- Best: {performers['best']['group']} ({performers['best']['value']:,.2f})\n"
+                        report_text += f"- Worst: {performers['worst']['group']} ({performers['worst']['value']:,.2f})\n\n"
+
+                    report_text += "\n## 📋 Data Quality\n"
+                    for metric, completeness in report_data['data_insights']['data_quality']['completeness'].items():
+                        report_text += f"- {metric}: {completeness} complete\n"
+
+                    # Download button
+                    st.download_button(
+                        label="💾 Download Text Report",
+                        data=report_text,
+                        file_name=f"tiktok_analysis_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain"
+                    )
+
+                elif export_format == "JSON Data":
+                    # JSON format for programmatic analysis
+                    import json
+                    json_data = json.dumps(report_data, indent=2, default=str)
+
+                    st.download_button(
+                        label="💾 Download JSON Report",
+                        data=json_data,
+                        file_name=f"tiktok_analysis_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                        mime="application/json"
+                    )
+
+                elif export_format == "CSV + Summary":
+                    # CSV data + summary
+                    csv_data = filtered_data.to_csv(index=False)
+
+                    summary = f"""Summary Report - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+File: {report_data['file_info']['filename']}
+Records: {len(filtered_data):,}
+Chart: {chart_type}
+Filters Applied: {len([f for f in [*filters.values(), *date_range_filters.values()] if f])}
+
+Key Metrics:
+"""
+                    for metric, data in report_data['overview_metrics'].items():
+                        summary += f"{metric}: {data['formatted']}\n"
+
+                    # Create zip with both files
+                    import zipfile
+                    import io
+
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                        zip_file.writestr("filtered_data.csv", csv_data)
+                        zip_file.writestr("summary.txt", summary)
+                        zip_file.writestr("full_report.json", json.dumps(report_data, indent=2, default=str))
+
+                    st.download_button(
+                        label="💾 Download ZIP Package",
+                        data=zip_buffer.getvalue(),
+                        file_name=f"tiktok_analysis_package_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                        mime="application/zip"
+                    )
+
+                st.success("✅ Report generated! Use the download button above.")
+
+                # Show preview
+                with st.expander("📋 Report Preview", expanded=False):
+                    if export_format == "Detailed Text":
+                        st.text(report_text[:2000] + "..." if len(report_text) > 2000 else report_text)
+                    elif export_format == "JSON Data":
+                        st.json(report_data)
+                    else:
+                        st.write("**Package Contents:**")
+                        st.write("- filtered_data.csv: Your filtered dataset")
+                        st.write("- summary.txt: Key insights summary")
+                        st.write("- full_report.json: Complete analysis data")
 
 if __name__ == "__main__":
     main()
